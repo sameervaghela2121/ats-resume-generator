@@ -13,11 +13,20 @@ export const generateATSResume = async (jobDescription, resumeContent) => {
           {
             role: "system",
             content:
-              "You are a helpful assistant specializing in creating ATS-friendly resumes.",
+              "You are a highly knowledgeable assistant with expertise in creating ATS-friendly resumes that effectively showcase relevant skills and experiences aligned with job requirements.",
           },
           {
             role: "user",
-            content: `Here is a job description: ${jobDescription}. Based on this job description, optimize the following resume content to improve its ATS compatibility: ${resumeContent}.`,
+            content: `Using the following job description: ${jobDescription}, enhance the resume provided below to be fully optimized for ATS systems. Ensure it contains:
+              - Key skills and keywords from the job description
+              - A clear and concise summary section that highlights relevant experience
+              - Quantifiable achievements, wherever applicable
+              - A structured layout that ATS software can easily parse
+              - Consistent formatting and professional tone
+        
+            Here is the resume to optimize: ${resumeContent}.
+            
+            Additionally, suggest any improvements in wording, structure, or specific sections that would strengthen this resume's impact for the targeted position.`,
           },
         ],
         max_tokens: 1500, // Adjust as needed for the length of the resume content
