@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { generateATSResume } from "../api/chatgpt";
+import { generateATSResume } from "../api/aiApi"; // Update the API handler
 import { calculateATSScore } from "../api/atsScoring";
 import ATSScore from "./ATSScore";
+import ModelSelector from "./ModelSelector";
 
 function ResumeEditor({ jobDescription, resumeFile }) {
   const [resumeContent, setResumeContent] = useState("");
   const [optimizedResume, setOptimizedResume] = useState("");
   const [scoreData, setScoreData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [selectedModel, setSelectedModel] = useState("ChatGPT");
+  const [apiKeys, setApiKeys] = useState({
+    chatgpt: import.meta.env.VITE_OPENAI_API_KEY,
+    claude: import.meta.env.VITE_CLAUDE_API_KEY,
+    gemini: import.meta.env.VITE_GEMINI_API_KEY,
+  });
+
+  const handleModelChange = (model, userApiKeys) => {
+    setSelectedModel(model);
+    setApiKeys({
+      ...apiKeys,
+      ...userApiKeys,
+    });
+  };
 
   const handleGenerateResume = async () => {
     if (!jobDescription || !resumeContent) {
@@ -17,18 +31,19 @@ function ResumeEditor({ jobDescription, resumeFile }) {
     }
 
     setLoading(true);
-    setError("");
     try {
       const generatedResume = await generateATSResume(
         jobDescription,
-        resumeContent
+        resumeContent,
+        selectedModel,
+        apiKeys
       );
       setOptimizedResume(generatedResume);
       const score = calculateATSScore(jobDescription, generatedResume);
       setScoreData(score);
     } catch (error) {
       console.error("Error generating optimized resume:", error);
-      setError("Failed to generate optimized resume. Please try again.");
+      alert("Failed to generate optimized resume. Please try again.");
     }
     setLoading(false);
   };
@@ -37,11 +52,6 @@ function ResumeEditor({ jobDescription, resumeFile }) {
     const fileReader = new FileReader();
     fileReader.onload = (event) => {
       setResumeContent(event.target.result);
-    };
-    fileReader.onerror = () => {
-      setError(
-        "Error reading resume file. Please try again with a different file."
-      );
     };
     fileReader.readAsText(resumeFile);
   };
@@ -55,7 +65,7 @@ function ResumeEditor({ jobDescription, resumeFile }) {
   return (
     <div>
       <h2>Resume Editor</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <ModelSelector onModelChange={handleModelChange} />
       <button onClick={handleGenerateResume} disabled={loading}>
         {loading ? "Generating..." : "Generate ATS-Friendly Resume"}
       </button>

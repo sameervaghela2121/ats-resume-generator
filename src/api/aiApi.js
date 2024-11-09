@@ -1,19 +1,33 @@
 import axios from "axios";
 
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
-
 export const generateATSResume = async (
   jobDescription,
   resumeContent,
-  userApiKey
+  model,
+  apiKeys
 ) => {
-  const apiKey = userApiKey || OPENAI_API_KEY;
   try {
+    const config = {
+      ChatGPT: {
+        url: "https://api.openai.com/v1/chat/completions",
+        key: apiKeys.chatgpt || import.meta.env.VITE_OPENAI_API_KEY,
+      },
+      Claude: {
+        url: "https://api.claudeai.com/v1/completions",
+        key: apiKeys.claude || import.meta.env.VITE_CLAUDE_API_KEY,
+      },
+      Gemini: {
+        url: "https://api.gemini.com/v1/chat/completions",
+        key: apiKeys.gemini || import.meta.env.VITE_GEMINI_API_KEY,
+      },
+    };
+
+    const { url, key } = config[model];
+
     const response = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
+      url,
       {
-        model: "gpt-4",
+        model: model === "ChatGPT" ? "gpt-3.5-turbo" : "advanced", // Adjust as necessary
         messages: [
           {
             role: "system",
@@ -22,7 +36,7 @@ export const generateATSResume = async (
           },
           {
             role: "user",
-            content: `Here is a job description: ${jobDescription}. Based on this job description, optimize the following resume content to improve its ATS compatibility: ${resumeContent}.`,
+            content: `Here is a job description: ${jobDescription}. Optimize the resume content: ${resumeContent}.`,
           },
         ],
         max_tokens: 1500,
@@ -30,45 +44,14 @@ export const generateATSResume = async (
       {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${key}`,
         },
       }
     );
+
     return response.data.choices[0].message.content;
   } catch (error) {
-    console.error("Error generating ATS-friendly resume with ChatGPT:", error);
-    throw error;
-  }
-};
-
-export const generateATSResumeWithClaude = async (
-  jobDescription,
-  resumeContent,
-  userApiKey
-) => {
-  const apiKey = userApiKey || CLAUDE_API_KEY;
-  try {
-    const response = await axios.post(
-      "https://api.anthropic.com/v1/complete",
-      {
-        prompt: `Based on the following job description:\n${jobDescription}\nOptimize the following resume for ATS compliance:\n${resumeContent}`,
-        max_tokens: 1500,
-        stop: ["\n\n"],
-        model: "claude-gemini-1",
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-        },
-      }
-    );
-    return response.data.completion;
-  } catch (error) {
-    console.error(
-      "Error generating ATS-friendly resume with Claude Gemini:",
-      error
-    );
+    console.error("Error generating ATS-friendly resume:", error);
     throw error;
   }
 };
