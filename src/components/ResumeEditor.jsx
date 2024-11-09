@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { generateATSResume } from "../api/aiApi"; // Update the API handler
+import { generateATSResume } from "../api/aiApi";
 import { calculateATSScore } from "../api/atsScoring";
 import ATSScore from "./ATSScore";
 import ModelSelector from "./ModelSelector";
